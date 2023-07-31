@@ -43,9 +43,35 @@ func (c *Client) GetDashboards(ctx context.Context) ([]Dashboard, error) {
 	return dashboards, nil
 }
 
-// func (c *Client) GetDashboard(ctx context.Context, id string) (*DashboardDetail, error) {
-// return getDashboard(c.cred, id)
-// }
+func (c *Client) GetDashboard(ctx context.Context, id string) (*DashboardDetail, error) {
+	dashboard := &DashboardDetail{}
+	req, err := http.NewRequest("GET", defaultBaseURL+"/"+id, nil)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := c.sendRequest(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	if err := runtime.UnmarshalAsJSON(resp, &dashboard); err != nil {
+		return nil, err
+	}
+	return dashboard, nil
+}
+
+// I am not sure about the return type of previous function, so I added this function to get raw data
+func (c *Client) GetDashboardRaw(ctx context.Context, id string) (string, error) {
+	req, err := http.NewRequest("GET", defaultBaseURL+"/"+id, nil)
+	if err != nil {
+		return "", err
+	}
+	resp, err := c.sendRequest(ctx, req)
+	if err != nil {
+		return "", err
+	}
+	body, err := runtime.Payload(resp)
+	return string(body), err
+}
 
 func (c *Client) sendRequest(ctx context.Context, req *http.Request) (*http.Response, error) {
 	token, err := c.cred.GetToken(ctx, policy.TokenRequestOptions{Scopes: []string{"https://rtd-metadata.azurewebsites.net/"}})
